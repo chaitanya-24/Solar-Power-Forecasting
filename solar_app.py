@@ -22,6 +22,9 @@ timestr = time.strftime("%Y%m%d-%H%M%S")
 from solar_ml import *
 from solar_dsm import *
 
+import warnings
+warnings.filterwarnings('ignore');
+
 html_temp = """
 		<div style="background-color:#3872fb;padding:10px;border-radius:10px">
 		<h1 style="color:white;text-align:center;">Solar Power Forecasting </h1>
@@ -37,7 +40,7 @@ st.set_page_config(**PAGE_CONFIG)
 
 ##For DSM Calculation
 state_code_dict =  {'Andhra Pradesh':1,'Uttar Pradesh':1,'Madhya Pradesh':1,'Gujarat':2}
-col7, col8, col9, cola, colb = st.beta_columns(5)
+col7, col8, col9, cola, colb = st.columns(5)
 with col9:
 	st.image(img,width = 120,use_column_width=True)
 
@@ -72,13 +75,13 @@ def main():
 	choice = st.sidebar.selectbox('Menu',menu)
 
 	if choice == 'Generate Forecast':
-		# colz,colx,coly = st.beta_columns([1,4,1])
+		# colz,colx,coly = st.columns([1,4,1])
 		# with colx:
 
 		#     st.header('Solar Power Forecasting')	
 		
 		st.subheader('Single Block Prediction')
-		col12,colp,colq,colr = st.beta_columns(4)
+		col12,colp,colq,colr = st.columns(4)
 		with col12:
 			Plant = ['Plant 1','Plant 2','Plant 3','Plant 4']
 			choice_plant = st.selectbox('Plant',Plant)
@@ -105,76 +108,80 @@ def main():
 		st.subheader('Multiple Blocks Prediction')
 		st.write('')
 		
-		collac, colla, collab = st.beta_columns(3)
+		collac, colla, collab = st.columns(3)
 		with collac:
-			Plant_ = ['Plant 1','Plant 2','Plant 3','Plant 4']
-			choice_plan_ = st.selectbox('Plant',Plant_,key='001')
+			Plant_ = ['Plant 1', 'Plant 2', 'Plant 3', 'Plant 4']
+			choice_plan_ = st.selectbox('Plant', Plant_, key='001')
 
 		with colla:
 			fr_date = st.date_input('From')
 
 		with collab:
-			t_date = st.date_input('To')	
+			t_date = st.date_input('To')   
 		uploaded_file = st.file_uploader("Choose a csv file", type="csv")
 		
 		if uploaded_file is not None:
-			file_details = {"FileName":uploaded_file.name,"FileType":uploaded_file.type}
+			file_details = {"FileName": uploaded_file.name, "FileType": uploaded_file.type}
 			df = pd.read_csv(uploaded_file)
-			df_n = df[['AMBIENT_TEMPERATURE','MODULE_TEMPERATURE','IRRADIATION']]
+			df_n = df[['AMBIENT_TEMPERATURE', 'MODULE_TEMPERATURE', 'IRRADIATION']]
 			st.write('Uploaded file')
-			st.dataframe(df.iloc[:,1:6])
+			st.dataframe(df.iloc[:, 1:6])
 			#save_uploaded_file(uploaded_file)
 		
 		st.write('')
 		st.write('')
 		
-		if st.button('Predict',key=2):
-			prediction_df = run_ml_app(df_n)	
-			prediction_df = pd.concat([df[['DATE_TIME','BLOCK']],pd.Series(prediction_df)/1000],axis=1)
-			prediction_df.columns = ['DATE_TIME','BLOCK','PREDICTED GEN(MW)']
-			with st.spinner('Model is working!...'):
-				time.sleep(0.2)
-				st.success('Forecast ready!')	
-			st.dataframe(prediction_df)
-			           
-			st.write('')
-			st.write('')
-			csv_downloader(prediction_df)
-			st.write('')
-			st.write('Forecast')
-			st.line_chart(prediction_df[['PREDICTED GEN(MW)']],use_container_width=True) 
-			# fig2 = plt.figure()
-			# sns.lineplot(data=prediction_df, x="BLOCK", y="PREDICTED GEN(MW)")
-			# st.pyplot(fig2) 
+		if st.button('Predict', key=2):
+			if df_n.empty or any(col not in df_n.columns for col in ['AMBIENT_TEMPERATURE', 'MODULE_TEMPERATURE', 'IRRADIATION']):
+				st.error('Invalid data. Please upload a valid CSV file with required columns.')
+			else:
+				prediction_df = run_ml_app(df_n)   
+				prediction_df = pd.concat([df[['DATE','TIME', 'BLOCK']], pd.Series(prediction_df) / 1000], axis=1)
+				prediction_df.columns = ['DATE','TIME', 'BLOCK', 'PREDICTED GEN (MW)']
+				with st.spinner('Model is working!...'):
+					time.sleep(0.2)
+					st.success('Forecast ready!')    
+				st.dataframe(prediction_df)
+							
+				st.write('')
+				st.write('')
+				# csv_downloader(prediction_df)  # Uncomment this if you have a function for downloading CSV
+				st.write('')
+				st.write('Forecast')
+				st.line_chart(prediction_df[['PREDICTED GEN (MW)']], use_container_width=True) 
+				prediction_df.to_csv('predicted.csv')
+				fig2 = plt.figure()
+				sns.lineplot(data=prediction_df, x="BLOCK", y="PREDICTED GEN (MW)")
+				st.pyplot(fig2) 
 
-			#, x="BLOCK", y="PREDICTED GEN(MW)") 
-			#st.area_chart(prediction_df[['PREDICTED GEN(MW)']],width=96)
-			# import altair as alt
+				# x="BLOCK", y="PREDICTED GEN(MW)"
+				st.area_chart(prediction_df[['PREDICTED GEN (MW)']],width=96)
+				import altair as alt
+				
+				source = prediction_df[['PREDICTED GEN(MW)','BLOCK']]
+
+				alt.Chart(source).mark_line().encode(
+				x='BLOCK',
+				y='PREDICTED GEN (MW)')
+
 			
-			# source = prediction_df[['PREDICTED GEN(MW)','BLOCK']]
-
-			# alt.Chart(source).mark_line().encode(
-		 #    x='BLOCK',
-		 #    y='PREDICTED GEN(MW)')
-
-			
 			
 
-		 #    if st.button('Plot',keys =02):
-		     
-		 #        sns.lineplot(data=df_n, x="BLOCK", y="Actual Gen (MW)")
-		         
-			# 		download = FileDownloader(prediction_df.to_csv(),file_ext='csv').download()
-			# p = Path('/Saving_files_here/Predicted_files')
-			# pred_file = prediction.to_csv('C:/Users/Hp/Desktop/Applied AI/Kaggle/Solar Power Forecasting/Saving_files_here/Predicted_files/1.csv')
-			#st.success("Saved file : in Saving_files_here/Predicted_files folder")
-			#save_predicted_file(pred_file)	
-			#prediction.to_csv(Path(p, 'match_' + file_date + '.csv'), index=False)	
+		# if st.button('Plot',keys=2):
+			
+		# 	sns.lineplot(data=df_n, x="BLOCK", y="Actual Gen (MW)")
+				
+		# 	download = FileDownloader(prediction_df.to_csv(),file_ext='csv').download()
+		# 	p = Path('/Saving_files_here/Predicted_files')
+		# 	pred_file = prediction.to_csv('C:/Users/csawa/Desktop/Solar_Power_Forecasting>/Saving_files_here/Predicted_files/1.csv')
+		# 	st.success("Saved file : in Saving_files_here/Predicted_files folder")
+		# 	save_predicted_file(pred_file)	
+		# 	prediction.to_csv(Path(p, 'match_' + file_date + '.csv'), index=False)
 		
 
 
 	elif choice == 'Forecast Analysis':
-		col10, col11, col12 = st.beta_columns([2,4,1])
+		col10, col11, col12 = st.columns([2,4,1])
 		with col11:
 			st.title('Forecast Analysis')
 
@@ -183,7 +190,7 @@ def main():
 		st.write('')
 		st.write('')
 
-		col1, col2, col3 = st.beta_columns(3)
+		col1, col2, col3 = st.columns(3)
 
 		with col1:
 			choice2 = st.selectbox('Select State',['Gujarat','Uttar Pradesh','Andhra Pradesh','Madhya Pradesh'])
@@ -214,7 +221,7 @@ def main():
 			df_act = df_act.iloc[:,1:]
 			#st.dataframe(df_act)
 		if uploaded_file_act and uploaded_file_pred is not None:
-			colj,colk = st.beta_columns((2,1))
+			colj,colk = st.columns((2,1))
 			with colj:
 				st.dataframe(df_pred)
 			with colk:
@@ -255,9 +262,9 @@ def main():
 					#st.success('Done!')	
 			#if st.button('Plot',key='new'):
 
-					fig5 = plt.figure()
+					fig5 = plt.figure(figsize=(15,8))
 					ax = plt.gca()
-					df_all.plot(kind='line',y="Predicted Gen (MW)",x='BLOCK',ax=ax)
+					df_all.plot(kind='line',y="PREDICTED GEN(MW)",x='BLOCK',ax=ax)
 					df_all.plot(kind='line',y="Actual Gen (MW)",x='BLOCK', color='red', ax=ax)
 					df_all.plot(kind='line',y="Deviation %",x='BLOCK', color='green', ax=ax)
 					#plt.show()
@@ -292,7 +299,7 @@ def main():
 				
 
 	elif choice == 'Load Data':
-		colc, cold, cole= st.beta_columns([2.8,4,1])
+		colc, cold, cole= st.columns([2.8,4,1])
 		with cold:
 			st.title('Load Data')
 
@@ -312,10 +319,10 @@ def main():
 
 		
 	else :
-		colx, coly = st.beta_columns([2,5])
+		colx, coly = st.columns([2,5])
 		with coly:
 			st.title('Comment Section')
-		colg, colh = st.beta_columns(2)
+		colg, colh = st.columns(2)
 		with colg:
 			Date2 = st.date_input('Select Date')
 		with colh:
@@ -349,27 +356,6 @@ def main():
 					
         
 						
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 if __name__=='__main__':

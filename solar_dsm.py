@@ -11,13 +11,13 @@ matplotlib.use('Agg')
 def dsm_code_1(avc,df_pred,df_act):
 
     df = pd.concat([df_pred,df_act],axis=1)
-    df['Deviation %'] = (abs(df_act['Actual Gen (MW)'] - df_pred['Predicted Gen (MW)']))/avc*100
+    df['Deviation %'] = (abs(df_act['Actual Gen (MW)'] - df_pred['PREDICTED GEN(MW)']))/avc*100
     dsm_list = []
     avc_units = avc * 250
     #units_dev = (df['Actual Gen(MW)']-df['Predicted Gen(MW)'])*250
     
     for i in range(len(df)):
-        units_dev = abs((df['Actual Gen (MW)'][i]-df['Predicted Gen (MW)'][i]))*250
+        units_dev = abs((df['Actual Gen (MW)'][i]-df['PREDICTED GEN(MW)'][i]))*250
         dev = df['Deviation %'][i]
         if dev <=15:
             dsm_list.append(0)
@@ -39,9 +39,9 @@ def dsm_code_1(avc,df_pred,df_act):
             
 
     abc = pd.concat([df,pd.Series(dsm_list)],axis=1)
-    abc.columns=['DATE_TIME','BLOCK','Predicted Gen (MW)','Actual Gen (MW)','Deviation %','DSM (Rs.)'] 
-    abc = abc[['DATE_TIME','BLOCK','Actual Gen (MW)','Predicted Gen (MW)','Deviation %','DSM (Rs.)']]
-    abc[['Actual Gen (MW)','Predicted Gen (MW)','Deviation %','DSM (Rs.)']] = round(abc[['Actual Gen (MW)','Predicted Gen (MW)'
+    abc.columns=['DATE', 'TIME','BLOCK','PREDICTED GEN(MW)','Actual Gen (MW)','Deviation %','DSM (Rs.)'] 
+    abc = abc[['DATE', 'TIME','BLOCK','Actual Gen (MW)','PREDICTED GEN(MW)','Deviation %','DSM (Rs.)']]
+    abc[['Actual Gen (MW)','PREDICTED GEN(MW)','Deviation %','DSM (Rs.)']] = round(abc[['Actual Gen (MW)','PREDICTED GEN(MW)'
     ,'Deviation %','DSM (Rs.)']],2)
     st.write('')
     st.write('MAPE : {}%'.format(round(abc['Deviation %'].mean(),2)))
@@ -54,12 +54,12 @@ def dsm_code_1(avc,df_pred,df_act):
 def dsm_code_2(avc,df_pred,df_act):
 
    df = pd.concat([df_pred,df_act],axis=1)
-   df['Deviation %'] = (abs(df_act['Actual Gen (MW)'] - df_pred['Predicted Gen (MW)']))/avc*100
+   df['Deviation %'] = (abs(df_act['Actual Gen (MW)'] - df_pred['PREDICTED GEN(MW)']))/avc*100
    dsm_list = []
    avc_units = avc * 250
     #units_dev = (df['Actual Gen(MW)']-df['Predicted Gen(MW)'])*250
    for i in range(len(df)):
-        units_dev = abs((df['Actual Gen (MW)'][i]-df['Predicted Gen (MW)'][i]))*250
+        units_dev = abs((df['Actual Gen (MW)'][i]-df['PREDICTED GEN(MW)'][i]))*250
         dev = df['Deviation %'][i]
         if dev <= 7:
             dsm_list.append(0)
@@ -78,9 +78,9 @@ def dsm_code_2(avc,df_pred,df_act):
             dsm3 = (units_dev -(0.23*avc_units)) * 0.75
             dsm_list.append(abs(dsm1)+abs(dsm2)+abs(dsm3))
    abc = pd.concat([df,pd.Series(dsm_list)],axis=1)
-   abc.columns=['DATE_TIME','BLOCK','Predicted Gen (MW)','Actual Gen (MW)','Deviation %','DSM (Rs.)'] 
-   abc = abc[['DATE_TIME','BLOCK','Actual Gen (MW)','Predicted Gen (MW)','Deviation %','DSM (Rs.)']]
-   abc[['Actual Gen (MW)','Predicted Gen (MW)','Deviation %','DSM (Rs.)']] = round(abc[['Actual Gen (MW)','Predicted Gen (MW)'
+   abc.columns=['DATE', 'TIME','BLOCK','PREDICTED GEN(MW)','Actual Gen (MW)','Deviation %','DSM (Rs.)'] 
+   abc = abc[['DATE', 'TIME','BLOCK','Actual Gen (MW)','PREDICTED GEN(MW)','Deviation %','DSM (Rs.)']]
+   abc[['Actual Gen (MW)','PREDICTED GEN(MW)','Deviation %','DSM (Rs.)']] = round(abc[['Actual Gen (MW)','PREDICTED GEN(MW)'
     ,'Deviation %','DSM (Rs.)']],2)
    #st.dataframe(abc)
    st.write('')
@@ -101,8 +101,8 @@ def visualize():
     if uploaded_file_report is not None:
         file_details = {"FileName":uploaded_file_report.name,"FileType":uploaded_file_report.type}
         df_all = pd.read_csv(uploaded_file_report)  
-    features = ("Actual Gen (MW)","Predicted Gen (MW)","Deviation %")
-    selected_feat = st.multiselect("Features",features,default=["Predicted Gen (MW)","Actual Gen (MW)","Deviation %"])
+    features = ("Actual Gen (MW)","PREDICTED GEN(MW)","Deviation %")
+    selected_feat = st.multiselect("Features",features,default=["PREDICTED GEN(MW)","Actual Gen (MW)","Deviation %"])
     
     #st.write(selected_feat[0])
     if st.button('Plot'):
@@ -110,7 +110,7 @@ def visualize():
         # sns.lineplot(data=df_all, x="BLOCK", y="Predicted Gen (MW)")
         # sns.lineplot(data=df_all, x="BLOCK", y="Actual Gen (MW)")
         st.dataframe(df_all)
-        st.line_chart(df_all[["Predicted Gen (MW)","Actual Gen (MW)","Deviation %"]],use_container_width=True)
+        st.line_chart(df_all[["PREDICTED GEN(MW)","Actual Gen (MW)","Deviation %"]],use_container_width=True)
         #   st.pyplot(fig)      
 	##Upload actual generation file from the plant
 	#uploaded_file = st.file_uploader("Upload Actual Generation", type="csv")	

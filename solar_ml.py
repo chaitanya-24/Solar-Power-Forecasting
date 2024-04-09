@@ -7,11 +7,11 @@ import streamlit as st
 
 outlier_imputer_dict = np.load('outlier_imputer_dict.npy',allow_pickle=True)
 def outlier_imputer(df):
-    		for var in df.columns:
-        		df[var] = np.where(df[var] > outlier_imputer_dict[var]['99th'],outlier_imputer_dict[var]['99th'],df[var])
-        		df[var] = np.where(df[var] < outlier_imputer_dict[var]['1st'],outlier_imputer_dict[var]['1st'],df[var])
-        
-    		return df    
+	for var in df.columns:
+		df[var] = np.where(df[var] > outlier_imputer_dict[var]['99th'],outlier_imputer_dict[var]['99th'],df[var])
+		df[var] = np.where(df[var] < outlier_imputer_dict[var]['1st'],outlier_imputer_dict[var]['1st'],df[var])
+
+	return df    
 
 @st.cache(allow_output_mutation=True)
 def load_model(model_file):
